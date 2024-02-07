@@ -10,8 +10,19 @@ myhtml =
     ( append_
       (h1_ "Heading")
       ( append_
-       (p_ "Paragraph #1")
-       (p_ "Paragraph #2")
+       (p_ "Paragraph")
+       ( append_ 
+        (ul_
+          [ p_ "item 1"
+          , p_ "item 2"
+          , p_ "item 3"
+          ])
+        (ol_
+          [ code_ "item 4 (code)"
+          , code_ "item 5 (code)"
+          , p_ "item 6"
+          ])
+       )
       )
     )
 
