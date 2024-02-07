@@ -52,3 +52,24 @@ myDocument =
       ]
   , Paragraph "Otherwise, it will only produce the .o and .hi files."
   ]
+
+replicate' :: Int -> a -> [a]
+replicate' n x =
+  if n <= 0
+    then []
+  else
+    x : replicate (n - 1) x
+
+even' :: Int -> Bool
+even' x =
+  if x == 0
+    then True
+  else
+    odd' (x - 1)
+
+odd' :: Int -> Bool
+odd' x =
+  if x == 0
+    then False
+  else
+    even' (x - 1)
