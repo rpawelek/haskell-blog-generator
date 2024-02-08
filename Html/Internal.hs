@@ -33,8 +33,8 @@ ol_ = Structure . el "ol" . concat . map (el "li" . getStructureString)
 code_ :: String -> Structure
 code_ = Structure . el "pre" . escape
 
-append_ :: Structure -> Structure -> Structure
-append_ c1 c2 = Structure (getStructureString c1 <> getStructureString c2)
+instance Semigroup Structure where
+  (<>) s1 s2 = Structure (getStructureString s1 <> getStructureString s2)
 
 render :: Html -> String
 render html =
