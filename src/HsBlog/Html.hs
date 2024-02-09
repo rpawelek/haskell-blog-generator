@@ -1,11 +1,10 @@
-module Html
+module HsBlog.Html
   ( Html
   , Title
   , Structure
   , html_
-  , p_
   , h_
-  , h1_
+  , p_
   , ul_
   , ol_
   , code_
@@ -13,4 +12,5 @@ module Html
   )
   where
 
-import Html.Internal
+import HsBlog.Html.Internal
+

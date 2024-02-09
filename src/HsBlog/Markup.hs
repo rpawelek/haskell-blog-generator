@@ -1,4 +1,9 @@
-module Markup (Document, Structure(..), parse) where
+module HsBlog.Markup
+  ( Document
+  , Structure(..)
+  , parse
+  )
+  where
 
 import Numeric.Natural
 import Data.Maybe (maybeToList)
@@ -45,7 +50,7 @@ parseLines context txts =
         _ ->
           maybe id (:) context (parseLines (Just (OrderedList [trim line])) rest)
 
-    -- Codeblock case
+    -- Code block case
     ('>' : ' ': line) : rest ->
       case context of
         Just (CodeBlock codeblock) ->
@@ -71,3 +76,4 @@ parseLines context txts =
 
 trim :: String -> String
 trim = unwords . words
+
