@@ -1,4 +1,4 @@
-module Markup (Document, Structure(..)) where
+module Markup (Document, Structure(..), parse) where
 
 import Numeric.Natural
 import Data.Maybe (maybeToList)
