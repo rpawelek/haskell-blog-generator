@@ -7,11 +7,12 @@ module OptParse
   where
 
 import Data.Maybe (fromMaybe)
+import HsBlog.Env
 import Options.Applicative
 
 data Options
   = ConvertSingle SingleInput SingleOutput
-  | ConvertDir FilePath FilePath
+  | ConvertDir FilePath FilePath Env
   deriving Show
 
 data SingleInput
@@ -88,7 +89,7 @@ pOutputFile = OutputFile <$> parser
 
 pConvertDir :: Parser Options
 pConvertDir =
-  ConvertDir <$> pInputDir <*> pOutputDir
+  ConvertDir <$> pInputDir <*> pOutputDir <*> pEnv
 
 pInputDir :: Parser FilePath
 pInputDir =
@@ -97,6 +98,32 @@ pInputDir =
       <> short 'i'
       <> metavar "DIRECTORY"
       <> help "Input directory"
+    )
+
+pEnv :: Parser Env
+pEnv =
+  Env <$> pBlogName <*> pStylesheet
+
+pBlogName :: Parser String
+pBlogName =
+  strOption
+    ( long "name"
+      <> short 'N'
+      <> metavar "STRING"
+      <> help "Blog name"
+      <> value (eBlogName defaultEnv)
+      <> showDefault
+    )
+
+pStylesheet :: Parser String
+pStylesheet =
+  strOption
+    ( long "style"
+      <> short 'S'
+      <> metavar "FILE"
+      <> help "Stylesheet filename"
+      <> value (eStylesheetPath defaultEnv)
+      <> showDefault
     )
 
 pOutputDir :: Parser FilePath
