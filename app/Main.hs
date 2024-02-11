@@ -1,3 +1,7 @@
+-- app/Main.hs
+
+-- | Entry point for the hs-blog-gen program
+
 module Main where
 
 import OptParse
@@ -41,6 +45,10 @@ main = do
       hClose inputHandle
       hClose outputHandle
 
+------------------------------------------------
+-- * Utilities
+
+-- | Confirm user action
 confirm :: IO Bool
 confirm =
   putStrLn "Are you sure? (y/n)" *>

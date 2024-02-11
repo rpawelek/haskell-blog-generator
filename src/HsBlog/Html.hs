@@ -1,3 +1,5 @@
+-- src/HsBlog/Html.hs
+
 module HsBlog.Html
   ( Html
   , Head
@@ -21,6 +23,5 @@ module HsBlog.Html
   )
   where
 
-import Prelude hiding (head)
 import HsBlog.Html.Internal
 

@@ -1,3 +1,5 @@
+-- src/HsBlog.hs
+
 module HsBlog
   ( convertSingle 
   , convertDirectory 

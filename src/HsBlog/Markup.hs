@@ -1,3 +1,5 @@
+-- src/HsBlog/Markup.hs
+
 module HsBlog.Markup
   ( Document
   , Structure(..)

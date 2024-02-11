@@ -1,3 +1,7 @@
+-- src/HsBlog/Directory.hs
+
+-- | Process multiple files and convert directories
+
 module HsBlog.Directory
   ( convertDirectory
   , buildIndex
@@ -32,6 +36,10 @@ import System.Directory
   , copyFile
   )
 
+-- | Copy files from one directory to another, converting '.txt' files to
+--  '.html' files in the process. Recording unsuccesful reads and writes to stderr.
+--
+-- May throw an exception on output directory creation.
 convertDirectory :: Env -> FilePath -> FilePath -> IO ()
 convertDirectory env inputDir outputDir = do
   DirContents filesToProcess filesToCopy <- getDirFilesAndContent inputDir
@@ -42,6 +50,10 @@ convertDirectory env inputDir outputDir = do
   writeFiles outputDir outputHtmls
   putStrLn "Done."
 
+------------------------------------
+-- * Read directory content
+
+-- | Returns the directory content
 getDirFilesAndContent :: FilePath -> IO DirContents
 getDirFilesAndContent inputDir = do
   files <- map (inputDir </>) <$> listDirectory inputDir
@@ -55,11 +67,17 @@ getDirFilesAndContent inputDir = do
     , dcFilesToCopy = otherFiles
     }
 
+-- | The relevant directory content for our application
 data DirContents
   = DirContents
     { dcFilesToProcess :: [(FilePath, String)]
+      -- ^ File paths and their content
     , dcFilesToCopy :: [FilePath]
+      -- ^ Other file paths, to be copied directly
     }
+
+------------------------------------
+-- * Build index page
 
 buildIndex :: [(FilePath, Markup.Document)] -> Reader Env Html.Html
 buildIndex files = do
@@ -86,6 +104,10 @@ buildIndex files = do
       <> mconcat previews
     )
 
+------------------------------------
+-- * Conversion
+
+-- | Convert text files to Markup, build an index, and render as html.
 txtsToRenderedHtml :: [(FilePath, String)] -> Reader Env [(FilePath, String)]
 txtsToRenderedHtml txtFiles = do
   let
@@ -103,12 +125,18 @@ convertFile (file, doc) = do
   env <- ask
   pure (file, convert env (takeBaseName file) doc)
 
+------------------------------------
+-- * Output to directory
+
+-- | Creates an output directory or terminates the program
 createOutputDirectoryOrExit :: FilePath -> IO ()
 createOutputDirectoryOrExit outputDir =
   whenIO
     (not <$> createOutputDirectory outputDir)
     (hPutStrLn stderr "Cancelled." *> exitFailure)
 
+-- | Creates the output directory.
+--   Returns whether the directory was created or not.
 createOutputDirectory :: FilePath -> IO Bool
 createOutputDirectory dir = do
   dirExists <- doesDirectoryExist dir
@@ -123,12 +151,14 @@ createOutputDirectory dir = do
   when create (createDirectory dir)
   pure create
 
+-- | Copy files to a directory, recording errors to stderr.
 copyFiles :: FilePath -> [FilePath] -> IO ()
 copyFiles outputDir files = do
   let
     copyFromTo file = copyFile file (outputDir </> takeFileName file)
   void $ applyIoOnList copyFromTo files >>= filterAndReportFailures
 
+-- | Write files to a directory, recording errors to stderr.
 writeFiles :: FilePath -> [(FilePath, String)] -> IO ()
 writeFiles outputDir files = do
   let
@@ -136,6 +166,10 @@ writeFiles outputDir files = do
       writeFile (outputDir  </> file) content
   void $ applyIoOnList writeFileContent files >>= filterAndReportFailures
 
+------------------------------------
+-- * IO work and handling errors
+
+-- | Try to apply an IO function on a list of values, document successes and failures
 applyIoOnList :: (a -> IO b) -> [a] -> IO [(a, Either String b)]
 applyIoOnList action inputs = do
   for inputs $ \input -> do
@@ -147,6 +181,7 @@ applyIoOnList action inputs = do
         )
     pure (input, maybeResult)
 
+-- | Filter out unsuccessful operations on files and report errors to stderr.
 filterAndReportFailures :: [(a, Either String b)] -> IO [(a, b)]
 filterAndReportFailures =
   foldMap $ \(file, contentOnErr) ->
@@ -156,6 +191,9 @@ filterAndReportFailures =
         pure []
       Right content ->
         pure [(file, content)]
+
+------------------------------------
+-- * Utilities
 
 confirm :: String -> IO Bool
 confirm question = do

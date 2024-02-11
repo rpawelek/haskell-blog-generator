@@ -1,3 +1,5 @@
+-- | src/HsBlog/Env.hs
+
 module HsBlog.Env where
 
 data Env

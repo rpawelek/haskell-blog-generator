@@ -1,3 +1,7 @@
+-- app/OptParse.hs
+
+-- | Command-line options parsing
+
 module OptParse
   ( Options(..)
   , SingleInput(..)
@@ -10,21 +14,31 @@ import Data.Maybe (fromMaybe)
 import HsBlog.Env
 import Options.Applicative
 
+------------------------------------------------
+-- * Our command-line options model
+
+-- | Model
 data Options
   = ConvertSingle SingleInput SingleOutput
   | ConvertDir FilePath FilePath Env
   deriving Show
 
+-- | A single input source
 data SingleInput
   = Stdin
   | InputFile FilePath
   deriving Show
 
+-- | A single output sink
 data SingleOutput
   = Stdout
   | OutputFile FilePath
   deriving Show
 
+------------------------------------------------
+-- * Parser
+
+-- | Parse command-line options
 parse :: IO Options
 parse = execParser opts
 
@@ -36,6 +50,7 @@ opts =
       <> progDesc "Convert markup files or directories  to html"
     )
 
+-- | Parser for all options
 pOptions :: Parser Options
 pOptions =
   subparser
@@ -53,18 +68,25 @@ pOptions =
       )
     )
 
+------------------------------------------------
+-- * Single source to sink conversion parser
+
+-- | Parser for single source to sink option
 pConvertSingle :: Parser Options
 pConvertSingle =
   ConvertSingle <$> pSingleInput <*> pSingleOutput
 
+-- | Parser for single input source
 pSingleInput :: Parser SingleInput
 pSingleInput =
   fromMaybe Stdin <$> optional pInputFile
 
+-- | Parser for single output sink
 pSingleOutput :: Parser SingleOutput
 pSingleOutput =
   fromMaybe Stdout <$> optional pOutputFile
 
+-- | Input file parser
 pInputFile :: Parser SingleInput
 pInputFile = fmap InputFile parser
   where
@@ -76,6 +98,7 @@ pInputFile = fmap InputFile parser
           <> help "Input file"
         )
 
+-- | Output file parser
 pOutputFile :: Parser SingleOutput
 pOutputFile = OutputFile <$> parser
   where
@@ -87,10 +110,14 @@ pOutputFile = OutputFile <$> parser
           <> help "Output file"
         )
 
+------------------------------------------------
+-- * Directory conversion parser
+
 pConvertDir :: Parser Options
 pConvertDir =
   ConvertDir <$> pInputDir <*> pOutputDir <*> pEnv
 
+-- | Parser for input directory
 pInputDir :: Parser FilePath
 pInputDir =
   strOption
@@ -100,10 +127,21 @@ pInputDir =
       <> help "Input directory"
     )
 
+-- | Parser for output directory
+pOutputDir :: Parser FilePath
+pOutputDir =
+  strOption
+    ( long "output"
+    <> short 'o'
+    <> metavar "DIRECTORY"
+    <> help "Output directory")
+
+-- | Parser for blog environment
 pEnv :: Parser Env
 pEnv =
   Env <$> pBlogName <*> pStylesheet
 
+-- | Blog name parser
 pBlogName :: Parser String
 pBlogName =
   strOption
@@ -115,6 +153,7 @@ pBlogName =
       <> showDefault
     )
 
+-- | Stylesheet parser
 pStylesheet :: Parser String
 pStylesheet =
   strOption
@@ -125,12 +164,4 @@ pStylesheet =
       <> value (eStylesheetPath defaultEnv)
       <> showDefault
     )
-
-pOutputDir :: Parser FilePath
-pOutputDir =
-  strOption
-    ( long "output"
-    <> short 'o'
-    <> metavar "DIRECTORY"
-    <> help "Output directory")
 
