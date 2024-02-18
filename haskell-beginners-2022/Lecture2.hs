@@ -43,6 +43,7 @@ module Lecture2
 -- VVV If you need to import libraries, do it after this line ... VVV
 import Data.Char (isSpace)
 import Data.Word (Word(..))
+import Data.List (sort)
 -- ^^^ and before this line. Otherwise the test suite might fail  ^^^
 
 {- | Implement a function that finds a product of all the numbers in
@@ -232,7 +233,13 @@ False
 True
 -}
 isIncreasing :: [Int] -> Bool
-isIncreasing = error "TODO"
+isIncreasing list =
+  case list of
+    [] -> True
+    (x : y : xs) ->
+      if x < y
+        then isIncreasing xs 
+        else False
 
 {- | Implement a function that takes two lists, sorted in the
 increasing order, and merges them into new list, also sorted in the
@@ -245,7 +252,7 @@ verify that.
 [1,2,3,4,7]
 -}
 merge :: [Int] -> [Int] -> [Int]
-merge = error "TODO"
+merge l1 l2 = sort $ l1 <> l2
 
 {- | Implement the "Merge Sort" algorithm in Haskell. The @mergeSort@
 function takes a list of numbers and returns a new list containing the
@@ -262,8 +269,12 @@ The algorithm of merge sort is the following:
 [1,2,3]
 -}
 mergeSort :: [Int] -> [Int]
-mergeSort = error "TODO"
-
+mergeSort [] = []
+mergeSort [x] = [x]
+mergeSort xs = merge firstHalf secondHalf
+  where firstHalf  = mergeSort . fst $ halves
+        secondHalf = mergeSort . snd $ halves
+        halves     = splitAt (length xs `div` 2) xs
 
 {- | Haskell is famous for being a superb language for implementing
 compilers and interpreters to other programming languages. In the next
@@ -315,7 +326,14 @@ data EvalError
 It returns either a successful evaluation result or an error.
 -}
 eval :: Variables -> Expr -> Either EvalError Int
-eval = error "TODO"
+eval _ (Lit value)    = Right value
+eval vars (Var var)   = case lookup var vars of
+                          Just value -> Right value
+                          Nothing    -> Left $ VariableNotFound var
+eval vars (Add e1 e2) = case (eval vars e1, eval vars e2) of
+                          (Right value1, Right value2) -> Right $ value1 + value2
+                          (Left e, _)                  -> Left e
+                          (_, Left e)                  -> Left e
 
 {- | Compilers also perform optimizations! One of the most common
 optimizations is "Constant Folding". It performs arithmetic operations
