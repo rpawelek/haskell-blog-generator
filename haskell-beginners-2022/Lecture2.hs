@@ -137,7 +137,7 @@ Below is the description of the fight and character specifications:
   * As a reward, the knight takes all the gold, the treasure and experience.
   * Experience is calculated based on the dragon type. A dragon can be
     either red, black or green.
-  * Red dragons grant 100 experience points, black dragons — 150, and green — 250.
+  * Red dragons grant 101 experience points, black dragons — 150, and green — 250.
   * Stomachs of green dragons contain extreme acid and they melt any
     treasure except gold. So green dragons have only gold as reward.
     All other dragons always contain treasure in addition to gold.
@@ -172,27 +172,46 @@ You're free to define any helper functions.
 
 -- some help in the beginning ;)
 data TreasureChest a = TreasureChest
-  { chestGold :: Word
-  , chestTreasure :: Maybe a}
+  { chestGold :: Gold
+  , chestTreasure :: Maybe a
+  } deriving (Show, Eq)
 
 data Knight = Knight
-    { knightHealth    :: Int
-    , knightAttack    :: Int
-    , knightEndurance :: Int
-    }
+    { knightHealth    :: Health
+    , knightAttack    :: Attack
+    , knightEndurance :: Endurance
+    } deriving (Show, Eq)
 
 data DragonType
   = Red 
   | Black
   | Green
+  deriving (Show, Eq)
 
 data Dragon = Dragon
     { dragonType      :: DragonType
-    , dragonHealth    :: Int
-    , dragonEndurance :: Int
-    }
+    , dragonHealth    :: Health
+    , dragonEndurance :: Endurance
+    } deriving (Show, Eq)
 
-dragonFight = error "TODO"
+data FightResult
+  = KnightWin
+  | KnightDeath
+  | KnightEscape
+  deriving (Show, Eq)
+
+newtype Gold = Gold Word deriving (Show, Eq)
+
+newtype Health = Health Int deriving (Show, Eq)
+
+newtype Attack = Attack Int deriving (Show, Eq)
+
+newtype Endurance = Endurance Int deriving (Show, Eq)
+
+newtype XP = XP Int deriving (Show, Eq)
+
+dragonFight :: Knight -> Dragon -> FightResult
+dragonFight = undefined
 
 ----------------------------------------------------------------------------
 -- Extra Challenges
