@@ -103,6 +103,8 @@ module Lecture4
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Semigroup (Max (..), Min (..), Semigroup (..), Sum (..))
 import Text.Read (readMaybe)
+import Control.Applicative (liftA2)
+import Lecture2 (dropSpaces)
 
 {- In this exercise, instead of writing the entire program from
 scratch, you're offered to complete the missing parts.
@@ -135,7 +137,31 @@ errors. We will simply return an optional result here.
 -}
 
 parseRow :: String -> Maybe Row
-parseRow = error "TODO"
+parseRow = readRow . split ','
+  where
+    readRow :: [String] -> Maybe Row
+    readRow cols = case cols of
+      [c1, c2, c3] -> Row <$> readProduct c1 <*> readTradeType c2 <*> readInt c3
+      _ -> Nothing
+
+    readProduct :: String -> Maybe String
+    readProduct p
+      | dropSpaces p == "" = Nothing
+      | otherwise = Just p
+
+    readTradeType :: String -> Maybe TradeType
+    readTradeType = readMaybe
+
+    readInt :: String -> Maybe Int
+    readInt int = readMaybe int >>= positiveOrNothing
+
+    positiveOrNothing :: Int -> Maybe Int
+    positiveOrNothing x = if x < 0 then Nothing else Just x
+    
+split :: Eq a => a -> [a] -> [[a]]
+split _ [] = []
+split sep str = x : split sep (drop 1 y)
+  where (x, y) = span (/= sep) str
 
 {-
 We have almost all we need to calculate final stats in a simple and
@@ -157,7 +183,10 @@ string.
 If both strings have the same length, return the first one.
 -}
 instance Semigroup MaxLen where
-
+  (<>) (MaxLen str1) (MaxLen str2)
+    = if length str1 >= length str2
+        then MaxLen str1
+        else MaxLen str2
 
 {-
 It's convenient to represent our stats as a data type that has
@@ -184,7 +213,17 @@ instance for the 'Stats' type itself.
 -}
 
 instance Semigroup Stats where
-
+  (<>) s1 s2 = Stats
+                { statsTotalPositions = statsTotalPositions s1 <> statsTotalPositions s2
+                , statsTotalSum       = statsTotalSum s1 <> statsTotalSum s2
+                , statsAbsoluteMax    = statsAbsoluteMax s1 <> statsAbsoluteMax s2
+                , statsAbsoluteMin    = statsAbsoluteMin s1 <> statsAbsoluteMin s2
+                , statsSellMax        = liftA2 (<>) (statsSellMax s1) (statsSellMax s2)
+                , statsSellMin        = liftA2 (<>) (statsSellMin s1) (statsSellMin s2)
+                , statsBuyMax         = liftA2 (<>) (statsBuyMax s1) (statsBuyMax s2)
+                , statsBuyMin         = liftA2 (<>) (statsBuyMin s1) (statsBuyMin s2)
+                , statsLongest        = statsLongest s1 <> statsLongest s2
+                }
 
 {-
 The reason for having the 'Stats' data type is to be able to convert
