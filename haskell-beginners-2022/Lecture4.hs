@@ -100,11 +100,15 @@ module Lecture4
     , printProductStats
     ) where
 
-import Data.List.NonEmpty (NonEmpty (..))
+import Data.List.NonEmpty (NonEmpty (..), nonEmpty)
 import Data.Semigroup (Max (..), Min (..), Semigroup (..), Sum (..))
 import Text.Read (readMaybe)
 import Control.Applicative (liftA2)
 import Lecture2 (dropSpaces)
+import Control.Monad
+import Data.Foldable
+import System.Environment (getArgs)
+import Data.Maybe (listToMaybe, mapMaybe)
 
 {- In this exercise, instead of writing the entire program from
 scratch, you're offered to complete the missing parts.
@@ -239,7 +243,26 @@ row in the file.
 -}
 
 rowToStats :: Row -> Stats
-rowToStats = error "TODO"
+rowToStats row = case rowTradeType row of
+  Buy ->  template { statsTotalSum = negate (statsTotalSum template)
+                   , statsBuyMax   = Just $ Max (rowCost row)
+                   , statsBuyMin   = Just $ Min (rowCost row)
+                   }
+
+  Sell -> template { statsSellMax = Just $ Max (rowCost row)
+                   , statsSellMin = Just $ Min (rowCost row)
+                   }
+
+  where template = Stats { statsTotalPositions = Sum 1
+                          , statsTotalSum       = Sum $ rowCost row
+                          , statsAbsoluteMax    = Max $ rowCost row
+                          , statsAbsoluteMin    = Min $ rowCost row
+                          , statsSellMax        = Nothing
+                          , statsSellMin        = Nothing
+                          , statsBuyMax         = Nothing
+                          , statsBuyMin         = Nothing
+                          , statsLongest        = MaxLen (rowProduct row)
+                         }
 
 {-
 Now, after we learned to convert a single row, we can convert a list of rows!
@@ -265,7 +288,10 @@ implement the next task.
 -}
 
 combineRows :: NonEmpty Row -> Stats
-combineRows = error "TODO"
+combineRows = combineStats . fmap rowToStats
+
+combineStats :: NonEmpty Stats -> Stats
+combineStats (x :| xs) = foldl' (<>) x xs
 
 {-
 After we've calculated stats for all rows, we can then pretty-print
@@ -276,7 +302,29 @@ you can return string "no value".
 -}
 
 displayStats :: Stats -> String
-displayStats = error "TODO"
+displayStats stats =
+  "Total positions: "
+  <> showGetSum (statsTotalPositions stats)
+  <> "\nTotal final balance: "
+  <> showGetSum (statsTotalSum stats)
+  <> "\nBiggest absolute cost: "
+  <> showGetMax (statsAbsoluteMax stats)
+  <> "\nSmallest absolute cost: "
+  <> showGetMin (statsAbsoluteMin stats)
+  <> "\nMax earning: "
+  <> maybe "no value" showGetMax (statsSellMax stats)
+  <> "\nMin earning: "
+  <> maybe "no value" showGetMin (statsSellMin stats)
+  <> "\nMax spending: "
+  <> maybe "no value" showGetMax (statsBuyMax stats)
+  <> "\nMin spending: "
+  <> maybe "no value" showGetMin (statsBuyMin stats)
+  <> "\nLongest product name: "
+  <> unMaxLen (statsLongest stats)
+  where
+    showGetSum = show . getSum
+    showGetMax = show . getMax
+    showGetMin = show . getMin
 
 {-
 Now, we definitely have all the pieces in places! We can write a
@@ -296,7 +344,10 @@ the file doesn't have any products.
 -}
 
 calculateStats :: String -> String
-calculateStats = error "TODO"
+calculateStats = statsOrError . nonEmpty . mapMaybe parseRow . lines
+
+statsOrError :: Maybe (NonEmpty Row) -> String
+statsOrError = maybe "The file doesn't have any products" (displayStats . combineRows)
 
 {- The only thing left is to write a function with side-effects that
 takes a path to a file, reads its content, calculates stats and prints
@@ -306,7 +357,7 @@ Use functions 'readFile' and 'putStrLn' here.
 -}
 
 printProductStats :: FilePath -> IO ()
-printProductStats = error "TODO"
+printProductStats = putStrLn . calculateStats <=< readFile
 
 {-
 Okay, I lied. This is not the last thing. Now, we need to wrap
@@ -322,8 +373,10 @@ https://hackage.haskell.org/package/base-4.16.0.0/docs/System-Environment.html#v
 -}
 
 main :: IO ()
-main = error "TODO"
-
+main = do
+  args <- getArgs
+  let param = listToMaybe args
+  maybe (putStrLn "error") printProductStats param
 
 {-
 And that's all!
